@@ -1,0 +1,519 @@
+---
+title: "3125 Biostatistics Module 3"
+output: 
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
+description: >
+    Tutorials for 3125 Biostatistics.
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(Biostatistics)
+library(Lahman)
+tutorial_options(exercise.timelimit = 60)
+knitr::opts_chunk$set(error = TRUE)
+```
+
+## Learning Outcomes
+- Visualizing five number summary of a quantitative variable
+- Visualization of the association between one quantitative variable and one categorical variable
+- Sampling distribution of mean
+- Hypothesis testing for means
+
+## Visualizing five number summary of a quantitative variable
+First, we will read a dataset `handheight` which has been analyzed in module 1.
+
+```{r}
+handheight <- read.csv("https://raw.githubusercontent.com/xzhang47/3125/main/handheight.csv")
+```
+
+#### Boxplots
+
+We can use a single boxplot as an alternative to a histogram for visualizing a single quantitative variable. To do so in `R`, we use the `boxplot()` function. We can visualize the variable `Height` using a boxplot.
+
+```{r}
+head(handheight)
+boxplot(handheight$Height)
+```
+
+## Visualizing the association between one quantitative variable and one categorical variable
+
+#### Boxplots
+
+To visualize the relationship between a quantitative variable and categorical variable, we can also use a **boxplot**. In the `handheight` dataset. A gender variable is also recorded in the dataset. 
+
+Here we used the `boxplot()` command to create side-by-side boxplots. However, since we are now dealing with two variables, the syntax has changed. The `R` syntax `Height ~ sex, data = handheight` reads "Plot the `Height` variable against the `sex` variable using the dataset `handheigt`."  
+
+
+```{r}
+boxplot(Height ~ Sex, data = handheight)
+```
+
+
+```{r}
+boxplot(Height ~ Sex, data = handheight,
+     xlab   = "Gender",
+     ylab   = "Height in inches",
+     main   = "Height vs Gender",
+     pch    = 20,
+     cex    = 2,
+     col    = "darkorange",
+     border = "dodgerblue")
+```
+
+Again, `boxplot()` has a number of additional arguments which have the ability to make our plot more visually appealing.
+
+## Sampling distribution of Mean
+
+We are going to explore the behavior of the statistic x-bar, the sample mean, relative to the parameter μ (mu), the population mean (when the variable of interest is quantitative).
+
+Let’s begin with an example.
+
+Birth weights are recorded for all babies in a town. The mean birth weight is 3,500 grams, µ = mu = 3,500 g. If we collect many random samples of 9 babies at a time, how do you think sample means will behave?
+
+**Center**: Some sample means will be on the low side — say 3,000 grams or so — while others will be on the high side — say 4,000 grams or so. In repeated sampling, we might expect that the random samples will average out to the underlying population mean of 3,500 g. In other words, the mean of the sample means will be µ (mu).
+
+**Spread**: For large samples, we might expect that sample means will not stray too far from the population mean of 3,500. Sample means lower than 3,000 or higher than 4,000 might be surprising. For smaller samples, we would be less surprised by sample means that varied quite a bit from 3,500. In others words, we might expect greater variability in sample means for smaller samples. So sample size will again play a role in the spread of the distribution of sample measures, as we observed for sample proportions.
+
+**Shape**: Sample means closest to 3,500 will be the most common, with sample means far from 3,500 in either direction progressively less likely. In other words, the shape of the distribution of sample means should bulge in the middle and taper at the ends with a shape that is somewhat normal. This, again, is what we saw when we looked at the sample proportions.
+
+The distribution of the values of the sample mean (x-bar) in repeated samples is called the sampling distribution of x-bar.
+
+To visualize this process, we can simulate 50 samples from a normal distribution using following code:
+
+```{r}
+set.seed(1337)
+mu = 0
+variance = 1
+sample_size = 50
+nsamples     = 10000
+x_bars      = rep(0, nsamples)
+for(i in 1:nsamples){
+  x_bars[i] = mean(rnorm(sample_size, mean = mu, sd = 1))
+}
+
+```
+
+Now we can visualize the histogram of 50 samples from a normal distribution:
+
+```{r, echo=FALSE}
+x_bar_hist = hist(rnorm(sample_size),# breaks = 50, 
+                  main = "Histogram of Sample Means",
+                  xlab = "Sample Means")
+```
+
+Then we can visualize the histogram of means of 10000 of 50 samples from a normal distribution:
+
+```{r, echo=FALSE}
+x_bar_hist = hist(x_bars, breaks = 50, 
+                  main = "Histogram of Sample Means",
+                  xlab = "Sample Means")
+```
+
+Now we will compare sample statistics from the empirical distribution with their known values based on the parent distribution.
+
+```{r}
+c(mean(x_bars), mu)
+```
+
+```{r}
+c(var(x_bars), variance / sample_size)
+```
+
+```{r}
+c(sd(x_bars), sqrt(variance) / sqrt(sample_size))
+```
+
+And here, we will calculate the proportion of sample means that are within 2 standard deviations of the population mean.
+
+```{r}
+mean(x_bars > mu - 2 * sqrt(variance) / sqrt(sample_size) &
+     x_bars < mu + 2 * sqrt(variance) / sqrt(sample_size))
+```
+
+This last histogram uses a bit of a trick to approximately shade the bars that are within two standard deviations of the mean.)
+
+```{r}
+shading = ifelse(x_bar_hist$breaks > mu - 2 * sqrt(variance) / sqrt(sample_size) & 
+                   x_bar_hist$breaks < mu + 2 * sqrt(variance) / sqrt(sample_size),
+                  "darkorange", "dodgerblue")
+x_bar_hist = hist(x_bars, breaks = 50, col = shading,
+                  main = "Histogram of Sample Means, Two Standard Deviations",
+                  xlab = "Sample Means")
+```
+
+## Statistical Inference
+
+#### Confidence Intervals – 
+Interval of values that the researcher is fairly sure will cover the true, unknown value of the population parameter
+
+- Use to estimate the value of a population parameter
+
+#### Hypothesis Testing – 
+Uses sample data to attempt to reject a hypothesis about the population
+
+- Researchers are trying to show that a something of interest is happening 
+- An overall model and related assumptions are made. (The most common being observations following a normal distribution.)
+- The **null** ($H_{0}$) and **alternative** ($H_{1}$ or $H_{A}$) hypothesis are specified. Usually the null specifies a particular value of a parameter.
+- With given data, the **value** of the *test statistic* is calculated.
+- Under the general assumptions, as well as assuming the null hypothesis is true, the **distribution** of the *test statistic* is known.
+- Given the distribution and value of the test statistic, as well as the form of the alternative hypothesis, we can calculate a **p-value** of the test.
+- Based on the **p-value** and pre-specified level of significance, we make a decision. One of:
+    - Fail to reject the null hypothesis.
+    - Reject the null hypothesis.
+ 
+We'll do some quick review of two of the most common tests to show how they are performed using `R`.
+ 
+## Comparing one mean to a hypothesized value
+
+#### One Sample t-Test
+
+Suppose $x_{i} \sim \mathrm{N}(\mu,\sigma^{2})$ and we want to test $H_{0}: \mu = \mu_{0}$ versus $H_{1}: \mu \neq \mu_{0}.$
+
+Assuming $\sigma$ is unknown, we use the one-sample Student's $t$ test statistic:
+
+\[
+t = \frac{\bar{x}-\mu_{0}}{s/\sqrt{n}} \sim t_{n-1},
+\]
+
+where $\bar{x}$ is the sample mean and $s$ is the sample standard deviation.
+
+A $100(1 - \alpha)$\% confidence interval for $\mu$ is given by,
+
+\[
+\bar{x} \pm t_{n-1}(\alpha/2)\frac{s}{\sqrt{n}}
+\]
+
+where $t_{n-1}(\alpha/2)$ is the critical value such that $P\left(t>t_{n-1}(\alpha/2)\right) = \alpha/2$ for $n-1$ degrees of freedom.
+
+#### One Sample t-Test: Example
+
+Suppose a grocery store sells "16 ounce" boxes of *Captain Crisp* cereal. A random sample of 9 boxes was taken and weighed. The weight in ounces are stored in the data frame `capt_crisp`.
+
+```{r}
+capt_crisp = data.frame(weight = c(15.5, 16.2, 16.1, 15.8, 15.6, 16.0, 15.8, 15.9, 16.2))
+```
+
+The company that makes *Captain Crisp* cereal claims that the average weight of a box is at least 16 ounces. We will assume the weight of cereal in a box is normally distributed and use a 0.05 level of significance to test the company's claim.
+
+To test $H_{0}: \mu \geq 16$ versus $H_{1}: \mu < 16$, the test statistic is
+
+\[
+t = \frac{\bar{x} - \mu_{0}}{s / \sqrt{n}}
+\]
+
+The sample mean $\bar{x}$ and the sample standard deviation $s$ can be easily computed using `R`. We also create variables which store the hypothesized mean and the sample size.
+
+```{r}
+x_bar = mean(capt_crisp$weight)
+s     = sd(capt_crisp$weight)
+mu_0  = 16
+n     = 9
+```
+
+We can then easily compute the test statistic.
+
+```{r}
+t = (x_bar - mu_0) / (s / sqrt(n))
+t
+```
+
+Under the null hypothesis, the test statistic has a $t$ distribution with $n - 1$ degrees of freedom, in this case `r n - 1`.
+
+To complete the test, we need to obtain the p-value of the test. Since this is a one-sided test with a less-than alternative, we need the area to the left of `r t` for a $t$ distribution with `r n - 1` degrees of freedom. That is,
+
+\[
+P(t_{`r n - 1`} < `r t`)
+\]
+
+```{r}
+pt(t, df = n - 1)
+```
+
+We now have the p-value of our test, which is greater than our significance level (0.05), so we fail to reject the null hypothesis.
+
+Alternatively, this entire process could have been completed using one line of `R` code.
+
+```{r}
+t.test(x = capt_crisp$weight, mu = 16, alternative = c("less"), conf.level = 0.95)
+```
+
+We supply `R` with the data, the hypothesized value of $\mu$, the alternative, and the confidence level. `R` then returns a wealth of information including:
+
+- The value of the test statistic.
+- The degrees of freedom of the distribution under the null hypothesis.
+- The p-value of the test.
+- The confidence interval which corresponds to the test.
+- An estimate of $\mu$.
+
+Since the test was one-sided, `R` returned a one-sided confidence interval. If instead we wanted a two-sided interval for the mean weight of boxes of *Captain Crisp* cereal we could modify our code.
+
+```{r}
+capt_test_results = t.test(capt_crisp$weight, mu = 16,
+                           alternative = c("two.sided"), conf.level = 0.95)
+```
+
+This time we have stored the results. By doing so, we can directly access portions of the output from `t.test()`. To see what information is available we use the `names()` function.
+
+```{r}
+names(capt_test_results)
+```
+
+We are interested in the confidence interval which is stored in `conf.int`.
+
+```{r}
+capt_test_results$conf.int
+```
+
+Let's check this interval "by hand." The one piece of information we are missing is the critical value, $t_{n-1}(\alpha/2) = t_{8}(0.025)$, which can be calculated in `R` using the `qt()` function.
+
+```{r}
+qt(0.975, df = 8)
+```
+
+So, the 95\% CI for the mean weight of a cereal box is calculated by plugging into the formula,
+
+\[
+\bar{x} \pm t_{n-1}(\alpha/2) \frac{s}{\sqrt{n}}
+\]
+
+```{r}
+c(mean(capt_crisp$weight) - qt(0.975, df = 8) * sd(capt_crisp$weight) / sqrt(9),
+  mean(capt_crisp$weight) + qt(0.975, df = 8) * sd(capt_crisp$weight) / sqrt(9))
+```
+
+## Paired Differences
+
+To conduct a paired-samples test, we need either two vectors of data, 
+$y_1$ and $y_2$, or we need one vector of data with a second that serves as a binary grouping variable. The test is then run using the syntax `t.test(y1, y2, paired=TRUE)`.
+
+For instance, let’s say that we work at a large health clinic and we’re testing a new drug, `Procardia`, that’s meant to reduce hypertension. We find 1000 individuals with a high systolic blood pressure ($bar{x}=145mmHg$, $S_D = 9mmHg$), we give them `Procardia` for a month, and then measure their blood pressure again. We find that the mean systolic blood pressure has decreased to 138mmHg with a standard deviation 8mmHg.
+
+```{r, echo = FALSE}
+set.seed(2820)
+preTreat <- c(rnorm(100, mean = 145, sd = 9))
+postTreat <- c(rnorm(100, mean = 138, sd = 8))
+difference <- preTreat - postTreat
+pairdata <- cbind.data.frame(preTreat, postTreat, difference)
+```
+
+```{r}
+pairdata
+```
+
+We can visualize the `preTreat` and `postTreat` with a kernel density plot as:
+
+```{r}
+plot(density(preTreat), main = "Density Plots for blood pressure before and after treatment")
+lines(density(postTreat))
+```
+
+We can visualize this difference with a kernel density plot as:
+
+```{r}
+plot(density(difference), main = "Density Plot for difference of BP before and after treatment")
+```
+
+Here, we would conduct a t-test using:
+```{r}
+t_test_paired = t.test(preTreat, postTreat, paired = TRUE)
+```
+
+To make inference, we can print `t_test_paired` or get the p-value or confidence interval separately:
+```{r}
+t_test_paired
+t_test_paired$p.value
+t_test_paired$conf.int
+```
+
+## Comparing two independent means
+
+#### Two Sample t-Test
+
+Suppose $x_{i} \sim \mathrm{N}(\mu_{x}, \sigma^{2})$ and $y_{i} \sim \mathrm{N}(\mu_{y}, \sigma^{2}).$ 
+
+Want to test $H_{0}: \mu_{x} - \mu_{y} = \mu_{0}$ versus $H_{1}: \mu_{x} - \mu_{y} \neq \mu_{0}.$
+
+Assuming $\sigma$ is unknown, use the two-sample Student's $t$ test statistic:
+
+\[
+t = \frac{(\bar{x} - \bar{y})-\mu_{0}}{s_{p}\sqrt{\frac{1}{n}+\frac{1}{m}}} \sim t_{n+m-2},
+\]
+
+where $\displaystyle\bar{x}$ is the sample mean for the first population, $\displaystyle\bar{y}$ is the sample mean for the second population, and $s_p^2$ is the pooled variance.
+
+A $100(1-\alpha)$\% CI for $\mu_{x}-\mu_{y}$ is given by
+
+\[
+(\bar{x} - \bar{y}) \pm t_{n+m-2}(\alpha/2) \left(s_{p}\textstyle\sqrt{\frac{1}{n}+\frac{1}{m}}\right),
+\]
+
+where $t_{n+m-2}(\alpha/2)$ is the critical value such that $P\left(t>t_{n+m-2}(\alpha/2)\right)=\alpha/2$.
+
+
+
+#### Two Sample t-Test: Example
+
+The simplest example of an experimental design is the setup for a two-sample $t$-test. There is a single factor variable with two levels which split the subjects into two groups. Often, one level is considered the **control**, while the other is the **treatment**. The subjects are randomly assigned to one of the two groups. After being assigned to a group, each subject has some quantity measured, which is the response variable.
+
+Mathematically, we consider the model
+
+\[
+y_{ij} \sim N(\mu_i, \sigma^2)
+\]
+
+where $i = 1, 2$ for the two groups and $j = 1, 2, \ldots n_i$. Here $n_i$ is the number of subjects in group $i$. So $y_{13}$ would be the measurement for the third member of the first group.
+
+So measurements of subjects in group $1$ follow a normal distribution with mean $\mu_1$.
+
+\[
+y_{1j} \sim N(\mu_1, \sigma^2)
+\]
+
+Then measurements of subjects in group $2$ follow a normal distribution with mean $\mu_2$.
+
+\[
+y_{2j} \sim N(\mu_2, \sigma^2)
+\]
+
+This model makes a number of assumptions. Specifically, 
+
+- The observations follow a **normal** distribution. The mean of each group is different.
+- **Equal variance** for each group.
+- **Independence**. Which is believable if groups were randomly assigned.
+
+Later, we will investigate the normal and equal variance assumptions. For now, we will continue to assume they are reasonable.
+
+The natural question to ask: Is there a difference between the two groups? The specific question we'll answer: Are the means of the two groups different?
+
+Mathematically, that is
+
+\[
+H_0: \mu_1 = \mu_2 \quad \text{vs} \quad H_1: \mu_1 \neq \mu_2
+\]
+
+For the stated model and assuming the null hypothesis is true, the $t$ test statistic would follow a $t$ distribution with degrees of freedom $n_1 + n_2 - 2$.
+
+```{r, echo = FALSE}
+set.seed(42)
+sleep_means = c(6.5, 8.2)
+sleep_sigma = 1.2
+melatonin = data.frame(
+  sleep = rnorm(n = 20, mean = sleep_means, sd = sleep_sigma),
+  group = rep(c("control", "treatment"), 10)
+)
+```
+
+As an example, suppose we are interested in the effect of [melatotin](https://en.wikipedia.org/wiki/Melatonin){target="_blank"} on sleep duration. A researcher obtains a random sample of 20 adult males. Of these subjects, 10 are randomly chosen for the control group, which will receive a placebo. The remaining 10 will be given 5mg of melatonin before bed. The sleep duration in hours of each subject is then measured. The researcher chooses a significance level of $\alpha = 0.10$. Was sleep duration affected by the melatonin?
+
+```{r}
+melatonin
+```
+
+Here, we would like to test,
+
+\[
+H_0: \mu_C = \mu_T \quad \text{vs} \quad H_1: \mu_C \neq \mu_T
+\]
+
+To do so in `R`, we use the `t.test()` function, with the `var.equal` argument set to `TRUE`.
+
+```{r}
+t.test(sleep ~ group, data = melatonin, var.equal = TRUE)
+```
+
+At a significance level of $\alpha = 0.10$, we reject the null hypothesis. It seems that the melatonin had a **statistically significant** effect. Be aware that statistical significance is not always the same as scientific or **practical significance**. To determine practical significance, we need to investigate the **effect size** in the context of the situation. Here the effect size is the difference of the sample means.
+
+```{r}
+t.test(sleep ~ group, data = melatonin, var.equal = TRUE)$estimate
+```
+
+Here we see that the subjects in the melatonin group sleep an average of about 1.5 hours longer than the control group. An hour and a half of sleep is certainly important!
+
+With a big enough sample size, we could make an effect size of say, four minutes statistically significant. Is it worth taking a pill every night to get an extra four minutes of sleep? (Probably not.)
+
+```{r}
+boxplot(sleep ~ group, data = melatonin, col = 5:6)
+```
+
+## Comparing multiple means
+
+#### One-Way ANOVA
+
+What if there are more than two groups? 
+
+Much like the two-sample case, we would again like to test if the means of the groups are equal.
+
+\[
+H_0: \mu_1 = \mu_2 = \ldots \mu_g \quad \text{vs} \quad H_1: \text{ Not all } \mu_i \text{ are equal.}
+\]
+
+Notice that the alternative simply indicates the some of the means are not equal, not specifically which are not equal. More on that later.
+
+Alternatively, we could write
+
+\[
+H_0: \alpha_1 = \alpha_2 = \ldots = \alpha_g = 0 \quad \text{vs} \quad H_1: \text{ Not all } \alpha_i \text{ are } 0.
+\]
+
+This test is called **Analysis of Variance**. Analysis of Variance (ANOVA) compares the variation due to specific sources (between groups) with the variation among individuals who should be similar (within groups). In particular, ANOVA tests whether several populations have the same mean by comparing how far apart the sample means are with how much variation there is within the samples. We use variability of means to test for equality of means, thus the use of *variance* in the name for a test about means.
+
+We'll leave out most of the details about how the estimation is done, but we'll see later, that it is done via least squares. We'll use `R` to obtain these estimates, but they are actually rather simple. We only need to think about the sample means of the groups.
+
+- $\bar{y}_i$ is the sample mean of group $i$.
+- $\bar{y}$ is the overall sample mean.
+- $s_{i}^{2}$ is the sample variance of group $i$.
+
+Let's consider an example with real data. We'll use the `coagulation` dataset from the `faraway` package. Here four different diets (`A`, `B`, `C`, `D`) were administered to a random sample of 24 animals. The subjects were randomly assigned to one of the four diets. For each, their blood coagulation time was measured in seconds.
+
+Here we would like to test
+
+\[
+H_0: \mu_A = \mu_B = \mu_C = \mu_D 
+\]
+
+where, for example, $\mu_A$ is the mean blood coagulation time for an animal that ate diet `A`.
+
+```{r}
+library(faraway)
+names(coagulation)
+plot(coag ~ diet, data = coagulation, col = 2:5)
+```
+
+We first load the data and create the relevant boxplot. The plot alone suggests a difference of means. The `aov()` function is used to obtain the relevant sums of squares. Using the `summary()` function on the output from `aov()` creates the desired ANOVA table. (Without the unneeded row for total.)
+
+```{r}
+coag_aov = aov(coag ~ diet, data = coagulation)
+coag_aov
+summary(coag_aov)
+```
+
+Were we to run this experiment, we would have pre-specified a significance level. However, notice that the p-value of this test is incredibly low, so using any reasonable significance level we would reject the null hypothesis. Thus we believe the diets had an effect on blood coagulation time.
+
+```{r}
+diets = data.frame(diet = unique(coagulation$diet))
+data.frame(diets, coag = predict(coag_aov, diets))
+```
+
+Here, we've created a dataframe with a row for each diet. By predicting on this dataframe, we obtain the sample means of each diet (group).
+
+### Factor Variables
+
+When performing ANOVA in `R`, be sure the grouping variable is a factor variable. If it is not, your result might not be ANOVA, but instead a linear regression with the predictor variable considered numeric.
+
+```{r}
+set.seed(42)
+response = rnorm(15)
+group    = c(rep(1, 5), rep(2, 5), rep(3, 5))
+bad = data.frame(response, group)
+summary(aov(response ~ group, data = bad)) # wrong DF!
+good = data.frame(response, group = as.factor(group))
+summary(aov(response ~ group, data = good))
+is.factor(bad$group)  # 1, 2, and 3 are numbers.
+is.factor(good$group) # 1, 2, and 3 are labels.
+```
+

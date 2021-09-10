@@ -1,0 +1,298 @@
+---
+title: "3125 Biostatistics Module 2"
+output: 
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
+description: >
+    Tutorials for 3125 Biostatistics.
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(Biostatistics)
+library(Lahman)
+tutorial_options(exercise.timelimit = 60)
+knitr::opts_chunk$set(error = TRUE)
+```
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(cache = TRUE, autodep = TRUE, fig.align = "center")
+```
+
+## Learning Outcomes 
+
+This module, we will focus on studying the relationship between two numeric variables. After reading this tutorial you will be able to:
+
+- Visualize the relationship between two numeric variables.
+- Quantify the relationship between two numeric variables using correlation coefficient and interpret it.
+- Understand the concept of a model.
+- Interpret regression coefficients and statistics in the context of real-world problems.
+- Use a regression model to make predictions.
+
+## Visualizing the relationship between two numeric variables
+
+First, we will read a dataset from  start by visualizing the relationship.
+
+```{r}
+handheight <- read.csv("https://raw.githubusercontent.com/xzhang47/3125/main/handheight.csv")
+```
+
+To get a first look at the data you can use the `View()` function inside RStudio.
+
+```{r, eval = FALSE}
+View(handheight)
+```
+
+We could also take a look at the variable names, the dimension of the data frame, and some sample observations with `str()`.
+
+```{r}
+str(handheight)
+```
+
+As we have seen before with data frames, there are a number of additional functions to access some of this information directly.
+
+```{r}
+dim(handheight)
+nrow(handheight)
+ncol(handheight)
+```
+
+### Scatterplots
+
+To visualize the relationship between two numeric variables we will use a **scatterplot**. This can be done with the `plot()` function. And the `R` syntax `HandSpan ~ Height, data = handheight` reads "Plot the `HandSpan` variable against the `Height` variable using the dataset `handheight`." We see the use of a `~` (which specifies a formula) and also a `data = ` argument. This will be a syntax that is common to many functions we will use in this course. 
+
+```{r}
+plot(HandSpan ~ Height, data = handheight)
+```
+
+```{r}
+plot(HandSpan ~ Height, data = handheight,
+     xlab = "Height (in Inches)",
+     ylab = "Hand Span (in cm)",
+     main = "Height vs Hand Span",
+     pch  = 20,
+     cex  = 2,
+     col  = "dodgerblue")
+```
+
+#### Exercise 1
+
+In this exercise, use a dataset `quolls` in the R package `Biostatistics`, shown as below:
+
+```{r}
+head(quolls, n = 10)
+```
+    
+```{r module1ex1, exercise = TRUE}
+    
+```
+
+```{r module1ex1-solution}
+
+```
+    
+<div id="module1ex1-hint">
+**Hint:** Use`barplot()` to get the plot. 
+</div>
+
+```{r summariseex4-check}
+"Great work!"
+```
+
+
+## Correlation Coefficient
+
+Correlation analysis assumes that:
+
+- the sample of individuals is a random sample from the population
+- the measurements have a bivariate normal distribution, which includes the following properties:
+- the relationship between the two variables (X and Y) is linear
+- the cloud of points in a scatterplot of X and Y has a circular or elliptical shape
+- the frequency distributions of X and Y separately are normal
+
+The assumptions are most easily checked using the scatterplot of X and Y.
+
+What to look for as potential problems in the scatterplot:
+
+- a “funnel” shape
+- outliers to the general trend
+- non-linear association
+- If any of these patterns are evident, then one should opt for a non-parametric analysis (Consult a statistician).
+
+For the `handheight` dataset, we have already examed the scatterplot. So we will calculate the pearson correlation for height and handspan. The method option is set to be "pearson". It can also be set to use two other correlation analysis methods: "Kendall" or "Spearman".
+
+```{r}
+cor(handheight$HandSpan, handheight$Height, method = "pearson")
+```
+
+The correlation is $`r cor(handheight$HandSpan, handheight$Height, method = "pearson")`$ which is consistent with what we observed from the above scatterplot, showing a positive relationship between height and handspan.
+
+## Simple Linear Regression
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(cache = TRUE, autodep = TRUE, fig.align = "center")
+```
+
+> "All models are wrong, but some are useful."
+>
+> --- **George E. P. Box**
+
+### Modeling
+
+Let's consider a simple example of how the height of a person relates to his/her hand spans and how can we make prediction the hand spans given the height. 
+
+Let's now define some terminology. We have pairs of data, $(x, y)$. We use $x$ as the **predictor** (explanatory) variable. The predictor variable is used to help *predict* or explain the **response** (target, outcome) variable, $y$.
+
+In the `handheight` example, we are interested in using the predictor variable `Height` to predict and explain the response variable `HandSpan`.
+
+#### Simple Linear Regression Model
+
+In this course, we would like to restrict our choice of model to *linear* functions of $x$. We will write our model using $\beta_1$ for the slope, and $\beta_0$ for the intercept,
+
+$$
+Y = \beta_0 + \beta_1 X + \epsilon.
+$$
+
+Often, we directly talk about the assumptions that this model makes. They can be cleverly shortened to **LINE**.  
+
+- **L**inear. The relationship between $Y$ and $x$ is linear, of the form $\beta_0 + \beta_1 x$.
+- **I**ndependent. The errors $\epsilon$ are independent.
+- **N**ormal. The errors, $\epsilon$ are normally distributed. That is the "error" around the line follows a normal distribution.
+- **E**qual Variance. At each value of $x$, the variance of $Y$ is the same, $\sigma^2$.
+
+- Quantitative Variable Condition
+- “Straight Enough” Condition
+- Outlier Condition
+
+As a side note, we will often refer to simple linear regression as **SLR**. Some explanation of the name SLR:
+
+- **Simple** refers to the fact that we are using a single predictor variable. Later we will use multiple predictor variables.
+- **Linear** tells us that our model for $Y$ is a linear combination of the predictors $X$. (In this case just the one.) Right now, this always results in a model that is a line, but later we will see how this is not always the case.
+- **Regression** simply means that we are attempting to measure the relationship between a response variable and (one or more) predictor variables. In the case of SLR, both the response and the predictor are *numeric* variables. 
+
+#### The `lm` Function
+
+So far we have done regression by deriving the least squares estimates, then writing simple `R` commands to perform the necessary calculations. Since this is such a common task, this is functionality that is built directly into `R` via the `lm()` command.
+
+The `lm()` command is used to fit **linear models** which actually account for a broader class of models than simple linear regression, but we will use SLR as our first demonstration of `lm()`. The `lm()` function will be one of our most commonly used tools, so you may want to take a look at the documentation by using `?lm`. You'll notice there is a lot of information there, but we will start with just the very basics. This is documentation you will want to return to often.
+
+We'll continue using the `handheight` data, and essentially use the `lm()` function to check the work we had previously done.
+
+```{r}
+stop_dist_model = lm(HandSpan ~ Height, data = handheight)
+```
+
+This line of code fits our very first linear model. The syntax should look somewhat familiar. We use the `dist ~ speed` syntax to tell `R` we would like to model the response variable `dist` as a linear function of the predictor variable `speed`. In general, you should think of the syntax as `response ~ predictor`. The `data = cars` argument then tells `R` that that `dist` and `speed` variables are from the dataset `cars`. We then store this result in a variable `stop_dist_model`.
+
+The variable `stop_dist_model` now contains a wealth of information, and we will now see how to extract and use that information. The first thing we will do is simply output whatever is stored immediately in the variable `stop_dist_model`.
+
+```{r}
+stop_dist_model
+```
+
+Next, it would be nice to add the fitted line to the scatterplot. To do so we will use the `abline()` function.
+
+```{r}
+plot(HandSpan ~ Height, data = handheight,
+     xlab = "Height (in Inches)",
+     ylab = "Hand Span (in cm)",
+     main = "Height vs Hand Span",
+     pch  = 20,
+     cex  = 2,
+     col  = "dodgerblue")
+abline(stop_dist_model, lwd = 3, col = "darkorange")
+```
+
+The `abline()` function is used to add lines of the form $a + bx$ to a plot. 
+
+#### Residuals
+
+If we think of our model as "Response = Prediction + Error," we can then write it as
+
+$$
+y = \hat{y} + e.
+$$
+
+We then define a **residual** to be the observed value minus the predicted value.
+
+$$
+e = y - \hat{y}
+$$
+
+We can then use a plot to access the residuals using the `$` operator. We are looking for a random scattered points pattern in the following plot.
+
+```{r}
+plot(handheight$Height, stop_dist_model$residuals)
+abline(0, 0)
+```
+
+#### Coefficients
+
+We can also access stored coefficients information in `stop_dist_model` using `coef()` functions. 
+
+```{r}
+coef(stop_dist_model)
+beta_0_hat = coef(stop_dist_model)[1]
+beta_1_hat = coef(stop_dist_model)[2]
+```
+
+What do these values tell us about our dataset?
+
+The slope *parameter* $\beta_1$ tells us that for an increase in height, the **mean** hand span increases by $\beta_1$. It is important to specify that we are talking about the mean. Recall that $\beta_0 + \beta_1 x$ is the mean of $Y$, in this case hand span, for a particular value of $x$. (In this case height.) So $\beta_1$ tells us how the mean of $Y$ is affected by a change in $x$.
+
+Similarly, the *estimate* $\hat{\beta}_1 = `r round(beta_1_hat, 2)`$ tells us that for an increase in height, the **estimated** *mean* hand span increases by $`r round(beta_1_hat, 2)`$ cm. Here we should be sure to specify we are discussing an estimated quantity. Recall that $\hat{y}$ is the estimated mean of $Y$, so $\hat{\beta}_1$ tells us how the estimated mean of $Y$ is affected by changing $x$. 
+
+The intercept *parameter* $\beta_0$ tells us the **mean** hand span for a person with height at zero. (Not realistic.) 
+
+#### Making Predictions
+
+
+We can now write the **fitted** or estimated line,
+
+$$
+\hat{y} = \hat{\beta}_0 + \hat{\beta}_1 x.
+$$
+
+In this case,
+
+$$
+\hat{y} = `r round(beta_0_hat, 2)` + `r round(beta_1_hat, 2)` x.
+$$
+
+
+Another useful function, which we will use almost as often as `lm()` is the `predict()` function.
+
+```{r}
+predict(stop_dist_model, newdata = data.frame(height = 8))
+```
+
+The above code reads "predict the stopping distance of a car traveling 8 miles per hour using the `stop_dist_model`." Importantly, the second argument to `predict()` is a data frame that we make in place. We do this so that we can specify that `8` is a value of `speed`, so that predict knows how to use it with the model stored in `stop_dist_model`. We see that this result is what we had calculated "by hand" previously.
+
+We could also predict multiple values at once.
+
+```{r}
+predict(stop_dist_model, newdata = data.frame(height = c(8, 21, 50)))
+```
+
+$$
+\begin{aligned}
+\hat{y} &= `r round(beta_0_hat, 2)` + `r round(beta_1_hat, 2)` \times 8 = `r round(beta_0_hat + beta_1_hat * 8, 2)` \\
+\hat{y} &= `r round(beta_0_hat, 2)` + `r round(beta_1_hat, 2)` \times 21 = `r round(beta_0_hat + beta_1_hat * 21, 2)` \\
+\hat{y} &= `r round(beta_0_hat, 2)` + `r round(beta_1_hat, 2)` \times 50 = `r round(beta_0_hat + beta_1_hat * 50, 2)`
+\end{aligned}
+$$
+
+####  Coefficient of Determination
+
+The **coefficient of determination**, $R^2$, is defined as
+
+The coefficient of determination is interpreted as the proportion of observed variation in $y$ that can be explained by the simple linear regression model.An `R` function that is useful in many situations is `summary()`. If we wanted to directly access the value of $R^2$, instead of copy and pasting it out of the printed statement from `summary()`, we could do so.
+
+```{r}
+R2 = summary(stop_dist_model)$r.squared
+R2
+```
+
