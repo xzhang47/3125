@@ -6,7 +6,7 @@ output:
     allow_skip: true
 runtime: shiny_prerendered
 description: >
-    Tutorials for 3125 Biostatistics.
+    Tutorials for 3125 Biostatistics. Adapted from https://daviddalpiaz.github.io/appliedstats/.
 ---
 
 ```{r setup, include=FALSE}
