@@ -1,0 +1,460 @@
+---
+title: "3125 Biostatistics Introduction to R and Frequently Asked Questions"
+output: 
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
+description: >
+    Tutorials for 3125 Biostatistics.
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(Biostatistics)
+library(Lahman)
+tutorial_options(exercise.timelimit = 60)
+knitr::opts_chunk$set(error = TRUE)
+```
+
+## Welcome
+
+This tutorial will help you set up your computer to use R. It is for you if you need to:
+
+* Install R on your computer
+* Install the RStudio IDE
+* Install the `Biostatistics` R package
+* Basics of R
+* Importing Datasets
+
+You can skip this tutorial if you've already done these things.
+
+## Is this tutorial for you?
+
+Do you need to work through the first four topics in the tutorial? Take the quiz below to find out.
+
+
+```{r quiz1, echo = FALSE}
+question("Check all that you have NOT done:",
+  answer("installed R on my computer", message = "* Install R"),
+  answer("installed the RStudio IDE", message = "* Install RStudio IDE"),
+  answer("installed an R package", message = "* Install Packages"),
+  answer("None of the above. I've done them all.", correct = TRUE, message = "You can skip this tutorial!"),
+  type = "multiple",
+  incorrect = "This tutorial is here to help! To get set up read:"
+)
+```
+
+## What are `R` and Rstudio
+
+`R` is both a programming language and software environment for statistical computing, which is *free* and *open-source*. To get started, you will need to install two pieces of software:
+
+- [`R`, the actual programming language.](http://cran.r-project.org/){target="_blank"}
+    - Chose your operating system, and select the most recent version, `r paste0(version$major, "." ,version$minor)`.
+- [RStudio, an excellent IDE for working with `R`.](http://www.rstudio.com/){target="_blank"}
+    - Note, you must have `R` installed to use RStudio. RStudio is simply an interface used to interact with `R`.
+
+The popularity of `R` is on the rise, and everyday it becomes a better tool for statistical analysis. It even generated this book! (A skill you will learn in this course.) There are many good resources for learning `R`. 
+
+The following few chapters will serve as a whirlwind introduction to `R`. They are by no means meant to be a complete reference for the `R` language, but simply an introduction to the basics that we will need along the way. Several of the more important topics will be re-stressed as they are actually needed for analyses.
+
+These introductory `R` chapters may feel like an overwhelming amount of information. You are not expected to pick up everything the first time through. You should try all of the code from these chapters, then return to them a number of times as you return to the concepts when performing analyses.
+
+`R` is used both for software development and data analysis. We will operate in a grey area, somewhere between these two tasks. Our main goal will be to analyze data, but we will also perform programming exercises that help illustrate certain concepts.
+
+RStudio has a large number of useful keyboard shortcuts. A list of these can be found using a keyboard shortcut -- the keyboard shortcut to rule them all:
+
+- On Windows: `Alt` + `Shift` + `K`
+- On Mac:  `Option` + `Shift` + `K`
+
+The RStudio team has developed [a number of "cheatsheets"](https://www.rstudio.com/resources/cheatsheets/){target="_blank"} for working with both `R` and RStudio. [This particular cheatsheet for "Base" `R`](http://github.com/rstudio/cheatsheets/raw/master/base-r.pdf){target="_blank"} will summarize many of the concepts in this document. ("Base" `R` is a name used to differentiate the practice of using built-in `R` functions, as opposed to using functions from outside packages, in particular, those from the [`tidyverse`](https://www.tidyverse.org/){target="_blank"}. More on this later.)
+
+When programming, it is often a good practice to follow a style guide. (Where do spaces go? Tabs or spaces? Underscores or CamelCase when naming variables?) No style guide is "correct" but it helps to be aware of what others do. The more important thing is to be consistent within your own code.
+
+- [Hadley Wickham Style Guide](http://adv-r.had.co.nz/Style.html){target="_blank"} from [Advanced `R`](http://adv-r.had.co.nz/){target="_blank"}
+- [Google Style Guide](https://google.github.io/styleguide/Rguide.xml){target="_blank"}
+
+## Install R
+
+### How to install R
+
+![](https://vimeo.com/203516510)
+
+### Test your knowledge
+
+```{r quiz2, echo=FALSE}
+quiz(caption = "Quiz - Install R",
+  question("Is R free to download and use?",
+    answer("Yes!", correct = TRUE, message = "R is free _and_ open source, which means that anyone can read, use, and copy the source code of the R language."),
+    answer("No.")
+  ),
+  question("Where do you download R?",
+    answer("www.rstudio.com/download"),
+    answer("[cloud.r-project.org](http://cloud.r-project.org)", correct = TRUE, message = "You can also download R from [cran.r-project.org](http://cran.r-project.org)"),
+    answer("www.r-project.org", message = "Good try, but not exactly. www.r-project.org doesn't provide a download link, but it does provide a link to one the websites above."),
+    answer("www.r.com"),
+    allow_retry = TRUE
+  ),
+  question("How often should you update R?",
+    answer("Everytime you use it", message = "This will be too often unless you use R very rarely!"),
+    answer("About once a year", correct = TRUE, "A new version of R is released about once a year. Update sooner if you encounter a bug that you cannot explain."),
+    answer("Never", message = "A new version of R is released about once a year. I'll assume that you are using the newest version of R, which will be the fastest version with the fewest unexpected behaviors." ),
+    allow_retry = TRUE
+  )
+)
+```
+
+## Install RStudio
+
+### How to install RStudio
+
+RStudio is an Integrated Development Environment for R. What does that mean? Well, if you think of R as a language, which it is, you can think of RStudio as a program that helps you write and work in the language. RStudio makes programming in R much easier and I suggest that you use it!
+
+![](https://vimeo.com/203516968)
+
+### Test your knowledge
+
+```{r quiz3, echo=FALSE}
+quiz(caption = "Quiz - Install RStudio",
+  question("What is the RStudio IDE?",
+    answer("An application that makes it easier to use R.", correct = TRUE, message = "RStudio organizes your workspace and makes it easier to write, use, debug, and save R code. I highly recommend it and will rely on the RStudio IDE in several tutorials."),
+    answer("An application that let's you use R without writing any code", message = "And thank goodness! Code provides a reproducible record of your work, which is essential for data science."),
+    answer("A spreadsheet program like Microsoft Excel."),
+    answer("Another name for R", message = "R and RStudio are two separate things. R is a language, like English. Think of RStudio as a program that helps you use the language, kind of like how a word processing program helps you write in English."),
+    allow_retry = TRUE
+  ),
+  question("Is the RStudio IDE free to download and use?",
+    answer("Yes!", correct = TRUE, message = "Like R, RStudio is free and open-source. There do exist professional versions of RStudio with enhanced features, but we will not rely on those features in these tutorials."),
+    answer("No.", message = "Like R, RStudio is free and open-source. There do exist professional versions of RStudio with enhanced features, but we will not rely on those features in these tutorials.")
+  ),
+  question("Where do you download RStudio?",
+    answer("www.rstudio.com/download", correct = TRUE, message = "For these tutorials, download and install the RStudio Desktop Open Source License."),
+    answer("[cloud.r-project.org](http://cloud.r-project.org)", message = "This is where you download R, not RStudio."),
+    answer("www.r-project.org"),
+    answer("[cran.rstudio.org](http://cran.rstudio.org)"),
+    allow_retry = TRUE
+  ),
+  question("Do you need to install R if you already have RStudio?",
+    answer("Yes.", correct = TRUE),
+    answer("No.", message = "R does not come with RStudio; you need to install R separately.")
+  )
+)
+```
+
+## Installing Packages
+
+`R` comes with a number of built-in functions and datasets, but one of the main strengths of `R` as an open-source project is its package system. Packages add additional functions and data. Frequently if you want to do something in `R`, and it is not available by default, there is a good chance that there is a package that will fulfill your needs.
+
+To install a package, use the `install.packages()` function. 
+
+```{r, eval = FALSE}
+install.packages("Biostatistics")
+```
+
+Once a package is installed, it must be loaded into your current `R` session before being used. 
+
+```{r, message = FALSE, warning = FALSE}
+library(Biostatistics)
+```
+
+Once you close `R`, all the packages are closed. The next time you open `R`, you do not have to install the package again, but you do have to load any packages you intend to use by invoking `library()`.
+
+
+### More about intalling R packages
+
+![](https://vimeo.com/203516241)
+
+### Test your knowledge
+
+```{r names, echo = FALSE}
+quiz(caption = "Quiz - Working with Packages",
+  question("What command do you use to install packages?",
+    answer("`library()`", message = "We will see what `library()` does later."),
+    answer("`install.packages()`", correct = TRUE),
+    answer("`install_packages()`"),
+    answer("There is no command. You must visit [cran.r-project.org](http://cran.r-project.org) and download packages manually.", message = "R makes it easy to download packages. You connect to the internet and then run one of the commands above."),
+    allow_retry = TRUE
+  ),
+  question("How often do you need to install a package on your computer?",
+    answer("Every time you restart R"),
+    answer("Every time you restart your computer"),
+    answer("Only once. Afterwards, R can find it on your hard drive as needed.", correct = TRUE),
+    answer("Never, as long as you are connected to the internet.", message = "This could be true if you are using R over a cloud service. However, if you are using R locally on your own computer, you will need to install each package that you use on your computer."),
+    allow_retry = TRUE
+  ),
+  question("What is the tidyverse?",
+    answer("A collection of packages that work well together and provide tools for common data science tasks.", correct = TRUE, message = 'You can install all of the tidyverse packages at once with `install.packages("tidyverse")`.'),
+    answer("A word processing program for R"),
+    answer("A code style that reads like poetry"),
+    answer("An alternate universe where everyone is an R programmer."),
+    allow_retry = TRUE
+  )
+)
+```
+
+
+## Introduction to `R` Programming
+
+Now, you have installed R and R studio, to get started, we'll use `R` like a simple calculator.
+
+First, R is **case sensitive**
+
+### Basic Calculations
+
+#### Addition, Subtraction, Multiplication and Division {-}
+
+| Math          | `R`     | Result    |
+|---------------|---------|-----------|
+| $3 + 2$       | `3 + 2` | `r 3 + 2` |
+| $3 - 2$       | `3 - 2` | `r 3 - 2` |
+| $3 \cdot2$    | `3 * 2` | `r 3 * 2` |
+| $3 / 2$       | `3 / 2` | `r 3 / 2` |
+
+#### Exponents  {-}
+
+| Math         | `R`             | Result            |
+|--------------|-----------------|-------------------|
+| $3^2$        | `3 ^ 2`         | `r 3 ^ 2`         |
+| $2^{(-3)}$   | `2 ^ (-3)`      | `r 2 ^ (-3)`      |
+| $100^{1/2}$  | `100 ^ (1 / 2)` | `r 100 ^ (1 / 2)` |
+| $\sqrt{100}$ | `sqrt(100)`     | `r sqrt(100)`     |
+
+#### Mathematical Constants  {-}
+
+| Math         | `R`             | Result            |
+|--------------|-----------------|-------------------|
+| $\pi$        | `pi`            | `r pi`            |
+| $e$          | `exp(1)`        | `r exp(1)`        |
+
+#### Logarithms  {-}
+
+Note that we will use $\ln$ and $\log$ interchangeably to mean the natural logarithm. There is no `ln()` in `R`, instead it uses `log()` to mean the natural logarithm.
+
+| Math              | `R`                 | Result                |
+|-------------------|---------------------|-----------------------|
+| $\log(e)$         | `log(exp(1))`       | `r log(exp(1))`       |
+| $\log_{10}(1000)$ | `log10(1000)`       | `r log10(1000)`       |
+| $\log_{2}(8)$     | `log2(8)`           | `r log2(8)`           |
+| $\log_{4}(16)$    | `log(16, base = 4)` | `r log(16, base = 4)` |
+
+#### Trigonometry  {-}
+
+| Math            | `R`           | Result          |
+|-----------------|---------------|-----------------|
+| $\sin(\pi / 2)$ | `sin(pi / 2)` | `r sin(pi / 2)` |
+| $\cos(0)$       | `cos(0)`      | `r cos(0)`      |
+
+### Functions
+
+Throughout the tutorial we will be using functions. Here we will discuss some of their details.
+
+```{r, eval = FALSE}
+function_name(arg1 = 10, arg2 = 20)
+```
+
+To use a function, you simply type its name, followed by an open parenthesis, then specify values of its arguments, then finish with a closing parenthesis. 
+
+An **argument** is a variable which is used in the body of the function. Specifying the values of the arguments is essentially providing the inputs to the function.
+
+### Getting Help
+
+In using `R` as a calculator, we have seen a number of functions: `sqrt()`, `exp()`, `log()` and `sin()`. To get documentation about a function in `R`, simply put a question mark in front of the function name and RStudio will display the documentation, for example: 
+
+```{r, eval = FALSE}
+?log
+?sin
+?paste
+?lm
+```
+
+
+## Dataset Setup
+
+### Data Variable Types
+
+In this course, we focused on analyzing two types of variables: 
+
+| **Categorical (Qualitative)** | **Quantitative (Measurement)**    |
+|-------------------------------|-----------------------------------|
+| Values measured in groups     | Values measured in numeric        |
+| or categories                 | values with meaning (units/counts)|
+| Examples:                     |   Examples:                       |
+| Gender                        |   # of minutes                    |
+| Favorite color                |   weight (in pounds)              |
+| Type of car                   |   snowfall (in inches)            |   
+
+
+In `R`, the data can be stored in various number of basic data *types*.
+
+- Numeric
+    - Also known as Double. The default type when dealing with numbers.
+    - Examples: `1`, `1.0`, `42.5`
+- Integer
+    - Examples: `1L`, `2L`, `42L`
+- Complex
+    - Example: `4 + 2i`
+- Logical
+    - Two possible values: `TRUE` and `FALSE`
+    - You can also use `T` and `F`, but this is *not* recommended.
+    - `NA` is also considered logical.
+- Character
+    - Examples: `"a"`, `"Statistics"`, `"1 plus 2."`
+
+Among them, numeric or integer is often used to record the quantitative variables while character is often used to store the categorical variables. Categorical variables can also be recorded as numeric in `R`. Complex and logical types won't be commonly used in this course.
+
+### Data Structures
+
+`R` also has a number of basic data *structures*. A data structure is either homogeneous (all elements are of the same data type) or heterogeneous (elements can be of more than one data type).
+
+| Dimension | **Homogeneous** | **Heterogeneous** |
+|-----------|-----------------|-------------------|
+| 1         | Vector          | List              |
+| 2         | Matrix          | Data Frame        |
+| 3+        | Array           |                   |
+
+### Vectors
+
+Many operations in `R` make heavy use of **vectors**. Vectors in `R` are indexed starting at `1`. That is what the `[1]` in the output is indicating, that the first element of the row being displayed is the first element of the vector. Larger vectors will start additional rows with `[*]` where `*` is the index of the first element of the row.
+
+Possibly the most common way to create a vector in `R` is using the `c()` function, which is short for "combine."" As the name suggests, it combines a list of elements separated by commas. 
+
+```{r}
+c(1, 3, 5, 7, 8, 9)
+```
+
+Here `R` simply outputs this vector. If we would like to store this vector in a **variable** we can do so with the **assignment** operator `=`. In this case the variable `x` now holds the vector we just created, and we can access the vector by typing `x`.
+
+```{r}
+x = c(1, 3, 5, 7, 8, 9)
+x
+```
+
+## Data Frames
+
+For this course, we will be using **data frame** most often which will be the most common way that we store and interact with data.
+
+### Create a dataset using vectors
+The first method to create a data frame is using the function `data.frame` to combine multiple **vector** into the dataframe.
+
+```{r}
+example_data = data.frame(x = c(1, 3, 5, 7, 9, 1, 3, 5, 7, 9),
+                          y = c(rep("Hello", 9), "Goodbye"),
+                          z = rep(c(TRUE, FALSE), 5))
+```
+
+A data frame is a **list** of vectors. So, each vector must contain the same data type, but the different vectors can store different data types. 
+
+```{r}
+example_data
+```
+
+## Importing Dataset
+
+### Import dataset stored in R packages
+
+First we will use a dataset supplied by and R package `Biostatistics`. Earlier we looked at installing packages, in particular the `Biostatistics` package. (This package contains several biostatistics datasets which will be used for demonstration). 
+
+```{r, message = FALSE, warning = FALSE}
+library(Biostatistics)
+```
+
+Inside the `Biostatistics` package, there is a dataset called `height_immunity`. By loading the package using the `library()` function, we can now access `height_immunity`.
+
+When using data from inside a package, there are three things we would generally like to do:
+
+- Look at the raw data.
+- Understand the data. (Where did it come from? What are the variables? Etc.)
+- Visualize the data.
+
+To look at the data, we have two useful commands: `head()` and `str()`.
+
+```{r}
+head(height_immunity, n = 10)
+```
+
+The function `head()` will display the first `n` observations of the data frame. If not using the function, write the name of dataset will print all observations.
+
+```{r}
+height_immunity
+```
+
+The function `str()` will display the "structure" of the data frame. It will display the number of **observations** and **variables**, list the variables, give the type of each variable, and show some elements of each variable. This information can also be found in the "Environment" window in RStudio.
+
+```{r}
+str(height_immunity)
+```
+
+As you can see, data frames have observations and variables. When displayed in the console or viewer, each row is an observation and each column is a variable. 
+
+To understand more about the data set, we use the `?` operator to pull up the documentation for the data.
+
+```{r, eval = FALSE}
+?height_immunity
+```
+
+`R` has a number of functions for quickly working with and extracting basic information from data frames. To quickly obtain a vector of the variable names, we use the `names()` function.
+
+```{r}
+names(height_immunity)
+```
+
+To access one of the variables **as a vector**, we use the `$` operator.
+
+```{r}
+height_immunity$sex
+height_immunity$age
+```
+
+We can use the `dim()`, `nrow()` and `ncol()` functions to obtain information about the dimension of the data frame.
+
+```{r}
+dim(height_immunity)
+nrow(height_immunity)
+ncol(height_immunity)
+```
+
+Here `nrow()` is also the number of observations, which in most cases is the *sample size*. `ncol()` is the number of variables.
+
+Subsetting data frames can work much like subsetting matrices using square brackets, `[,]`. Here, we find fuel efficient vehicles earning over 35 miles per gallon and only display `manufacturer`, `model` and `year`.
+
+```{r}
+height_immunity[height_immunity$age > 35, c("age", "sex", "body.height")]
+```
+
+An alternative would be to use the `subset()` function, which has a much more readable syntax.
+
+```{r, eval = FALSE}
+subset(height_immunity, subset = age > 35, select = c("age", "sex", "body.height"))
+```
+
+Both approaches produce the same results. Which you use will be largely based on a given situation as well as user preference.
+
+When subsetting a data frame, be aware of what is being returned, as sometimes it may be a vector instead of a data frame. 
+
+### Import dataset from local directory
+
+Aternatively, we can also import data from various file types in into `R`.
+
+First, write the dataset to your local computer hard disk by update the directory path: `data/height_immunity.csv` to your own computer path. This particular line of code assumes that the file `height_immunity.csv` exists in a folder called `data` in your current working directory.
+
+```{r writecsv, exercise = TRUE, exercise.eval = FALSE}
+write.csv(height_immunity, "data/height_immunity.csv", row.names = FALSE)
+```
+
+```{r summarise-check}
+"Good job!"
+```
+
+To read this data into `R`, we would use the `read.csv()` function. Please update the directory path: "data/height_immunity.csv" to your own computer path.
+
+```{r readcsv, exercise = TRUE, exercise.eval = FALSE}
+height_immunity_data_from_csv = read.csv("data/height_immunity.csv")
+```
+
+Now you can use the function `head()` and other functions we introduced as above to explore the basic features of the imported dataset: `height_immunity_data_from_csv`.
+
+```{r}
+head(height_immunity_data_from_csv, n = 10)
+```
+

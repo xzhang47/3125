@@ -1,0 +1,174 @@
+---
+title: "3125 Biostatistics Module 4"
+output: 
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
+description: >
+    Tutorials for 3125 Biostatistics.
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+library(tidyverse)
+library(Biostatistics)
+library(Lahman)
+tutorial_options(exercise.timelimit = 60)
+knitr::opts_chunk$set(error = TRUE)
+```
+
+## Learning Outcomes 
+
+This module, we will focus on studying the relationship between two categorical variables. After reading this tutorial you will be able to:
+
+- Visualize the relationship between two categorical variables.
+- Quantify the relationship between two categorical variables using odds ratios and interpret them.
+- Test for the independence of two categorical variables.
+
+## Displaying the association between two categorical variables
+Construct a contingency table
+Construct a grouped bar chart
+
+#### Frequency table
+
+In this tutorial, we will learn how to look at, and test for, the association between two categorical variables. We’ll use the a `divorce` data set as an example, looking at the association between gender and divorce. Let’s load the data from the .csv file (Gender disparity in the rate of partner abandonment in patients with serious medical illness):
+
+```{r}
+divorce <- read.csv(url("https://raw.githubusercontent.com/xzhang47/3125/main/chap09q03DiseaseAndDivorce.csv"), header = TRUE)
+divorce
+```
+
+The variables we’ll use are “infection” and “fate”. 
+```{r}
+divorce
+```
+
+A contingency table is an effective method to see the association between two categorical variables. Moreover, other R functions we will use in this tutorial require a contingency table as input.
+
+A frequency table can be created using a function called `table()`. To create a contingency table that shows the relationship between two categorical variables, we simply give `table()` the vectors that contain those two variables. Put the explanatory variable first, and then the response variable after a comma.
+
+```{r}
+divorce_table <- table(divorce$illPartner, divorce$divorce)
+divorce_table
+```
+
+This shows us that in the divorce data set, there are 53 female who divorced after cancer diagnosis, 7 males who divorced after cancer diagnosis.
+
+It is useful to keep this frequency table as a named object, as we have done here (divorce_table). We shall use this table several times in later analyses.
+
+Sometimes for contingency analysis we have already summarized the counts for each case. In these cases it is useful to be able to create a data table directly from these counts. The following syntax will allow you to create a data table directly:
+
+```{r}
+divorce_table_direct <- data.frame(divorce=c(7,53),nodivorce=c(254, 201), row.names=c("man","woman"))
+```
+
+
+#### Grouped bar graphs
+
+Although the continency tables were informative, graphs can be much more effective at showing associations.Below, we will use the function `barplot` to draw a grouped barplot, the input will be the object `divorce_table`, contingency table from above section.
+
+
+```{r}
+barplot(divorce_table,                       # Grouped barplot using Base R
+        beside = TRUE, legend = TRUE)
+```
+
+
+#### Mosaic plots
+The mosaic plot is another graphical technique for showing the association between two categorical variables. Here, each combination of the variables is represented by a rectangle, and the size of the rectangle is proportional to the number of individuals in that combination.
+
+R has a function to calculate mosaic plots, with the sensible name mosaicplot(). In its most basic form, you just give it a frequency table as input.
+
+```{r}
+mosaicplot(divorce_table)
+```
+
+This shows the basic pattern. However, this plot can be greatly improved by adding a couple of extra options, to specify color and axes labels. We can add the option `color = c(“darkred”, “gold”)` to tell R which colors to use for the different response variables. This is a vector of color names that R assigns in the same order as the order of the categories of the variable plotted on the vertical axis (the response variable) starting with the topmost. (R has many named colors, including all the basics like “red”, “orange”, “blue”, etc.)
+
+We would also like the axes to have labels. We can specify these with xlab and ylab as options. Let’s simply call the x-axis “Gender” and the y-axis “Divorce”. Here’s what the command would now look like:
+
+```{r}
+mosaicplot(divorce_table, color = c("darkred", "gold"), xlab ="Gender", ylab = "Divorce")
+```
+
+## Odds ratios
+One of the ways to measure the strength of the association between two categorical variables is an odds ratio.
+
+In R, the simplest way to estimate an odds ratio is to use the command fisher.test(). This function will also perform a Fisher’s exact test (more on that later). The input to this function is a contingency table like the one we calculated above. We’ll use the results in a couple of ways, so let’s save the results in an object. (Here we called it divorce_fisher.)
+
+```{r}
+divorce_fisher = fisher.test(divorce_table)
+```
+
+The output of this function has several parts, two of which we’ll want to look at now for estimating an odds ratio. We can see the specific elements of the output by using the $ notation.
+
+Add $estimate after the results of the fisher.test() function call to get the odds ratio estimate. For example, if we want to know the odds ratio for divorce as a function of gender, we write:
+
+```{r}
+divorce_fisher$estimate
+```
+
+This shows that the odds ratio is about $`r round(divorce_fisher$estimate, 2)`$ —the odds of a male getting divorce were only about a tenth of the odds of a female getting divorce. This is (man divorce / man no divorce) / (woman divorce / woman no divorce). The order of the values in the odds ratios is determined by the order of the values of each variable; by default R uses alphabetical order.
+
+This fisher.test() function also calculates the 95% confidence interval for the odds ratio, and assigns it to an output variable called conf.int. We can see the 95% confidence interval for the odds ratio with a command like:
+
+```{r}
+divorce_fisher$conf.int
+```
+
+The confidence interval for this odds ratio ranges from about $`r round(divorce_fisher$conf.int[1], 2)`$ to about $`r round(divorce_fisher$conf.int[2], 2)`$.
+
+## $\chi^2$ contingency test on a 2 x 2 table
+
+A $\chi^2$ contingency analysis allows us to test the null hypothesis that two categorical variables are independent of each other.
+
+#### Hypothesis statement
+
+Here are the null and alternative hypotheses:
+
+H0: There is no association between divorce after cancer diagnosis and gender.
+HA: There is an association between divorce after cancer diagnosis and gender.
+
+- We have to choose the significance level and we set $\alpha$ = 0.05.
+- It is a two-tailed alternative hypothesis
+- We’ll use a contingency test to test the null hypothesis, because this is appropriate for analyzing for association between two categorical variables.
+- We will use the $\chi^2$ test statistic, with degrees of freedom equal to (r-1)(c-1), where “r” is the number of rows, and “c” is the number of colums, so (2-1)(2-1) = 1.
+
+#### Check Assumptions
+
+We must check assumptions of the $\chi^2$ contingency test. The $\chi^2$ contingency test (also known as association test) has assumptions that must be checked prior to proceeding:
+
+ - none of the categories should have an expected frequency of less than one
+ - no more than 20% of the categories should have expected frequencies less than five
+ - To test these assumptions, we need to actually conduct the test, because in doing so R calculates the expected frequencies for us.
+ 
+Remember that the $\chi^2$ test is an approximation, and requires that all of the expected values are greater than 1 and that at least 80% are greater than 5. When doing such a test of independence on a computer, it is probably better to use Fisher’s exact test, which doesn’t have this restriction.
+
+The $\chi^2$ contingency test can be done with a function,`chisq.test()`. If we give a frequency table as input, this function will calculate the $\chi^2$ test for us.
+
+Before we do the test, though, we need to make sure that the assumptions of the $\chi^2$ test are met by our data. Fortunately, the `chisq.test()` function also provides a way for us to look at the expected values. If we give a frequency table as input, and then add $expected at the end of the function, it will show us the expected values for a test of independence, like this:
+
+```{r}
+chisq.test(divorce_table)$expected
+```
+
+#### Test Results
+
+In this case all the expected values are greater than 5, so we have no problem meeting this assumption. Therefore, it is appropriate to do a χ2 contingency test. Just give a frequency table as input to the `chisq.test()` function to do this test. We’ve added the option `“`correct = FALSE` to tell R to not do a Yate’s correction, which can be overly conservative.
+
+```{r}
+chisq.test(divorce_table, correct=FALSE)
+```
+
+This output shows that the $\chi^2$ value for this test is $`r chisq.test(divorce_table, correct=FALSE)$statistic`$, with 1 degree of freedom and a P-value $`r chisq.test(divorce_table, correct=FALSE)$p.value`$. So we can reject the null hypothesis of no association between gender and divorce after cancer diagnosis.
+
+You can also directly output the test satitic and p-value as below:
+```{r}
+chisq.test(divorce_table, correct=FALSE)$statistic
+```
+
+```{r}
+chisq.test(divorce_table, correct=FALSE)$p.value
+```
+
